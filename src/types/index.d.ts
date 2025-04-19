@@ -1,4 +1,5 @@
 export * from './ActionAgainstBoss'
 export * from './ActiveBoss'
+export * from './ActivePlayer'
 export * from './Boss'
 export * from './Player'
