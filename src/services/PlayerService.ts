@@ -1,3 +1,4 @@
+import { DEFAULT_ENERGY, DEFAULT_HP } from '../constants'
 import { Weapon } from '../enums'
 import type { ActivePlayer, GameState, Player } from '../types'
 // import { readFileSync } from 'node:fs'
@@ -20,16 +21,18 @@ export const PlayerService = () => {
 
     const add = (name: string, selectedWeapon: Weapon): Promise<void> => {
         const newPlayer: Player = {
+            energy: DEFAULT_ENERGY,
+            hp: DEFAULT_HP,
+            id: allPlayers.length,
             name,
             selectedWeapon,
-            hp: 100,
-            id: allPlayers.length,
         }
 
         allPlayers.push(newPlayer)
         statuses[name] = {
             ...newPlayer,
-            currentHp: newPlayer.hp, // default full hp
+            currentEnergy: newPlayer.energy,
+            currentHp: newPlayer.hp,
         }
 
         return Promise.resolve()
@@ -53,6 +56,7 @@ export const PlayerService = () => {
 
             Object.entries(parsedPlayers).forEach(([k, v]) => {
                 allPlayers.push({
+                    energy: v.energy,
                     hp: v.hp,
                     id: v.id,
                     name: v.name,
@@ -72,7 +76,11 @@ export const PlayerService = () => {
         // use imported JSON instead of reading from file
         playerData.forEach((p: Player) => {
             allPlayers.push(p)
-            statuses[p.name] = { ...p, currentHp: p.hp } as ActivePlayer
+            statuses[p.name] = {
+                ...p,
+                currentEnergy: p.energy, // default full energy
+                currentHp: p.hp, // default full hp
+            } as ActivePlayer
         })
 
         return Promise.resolve()
