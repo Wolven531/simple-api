@@ -152,17 +152,11 @@ Promise.all([
 	</head>
 	<style>
 		:root {
-			--color-primary: #0aa;
-			--color-dark: #eee;
-			--color-light: #333;
-		}
+			color-scheme: light dark;
 
-		@media (prefers-color-scheme: dark) {
-			:root {
-				--color-primary: #0cc;
-				--color-dark: #333;
-				--color-light: #ccc;
-			}
+			--color-dark: light-dark(#eee, #333);
+			--color-light: light-dark(#333, #ccc);
+			--color-primary: light-dark(#0aa, #0cc);
 		}
 
 		body {
@@ -174,46 +168,46 @@ Promise.all([
 			grid-template-rows: 5rem 1fr 3rem;
 			margin: 0;
 			padding: 0;
-		}
-		
-		a {
-			border: 1px solid var(--color-light);
-			color: var(--color-primary);
-			font-family: monospace;
-			padding: 0 0.5rem;
-			text-decoration: none;
-		}
-		
-		code {
-			border: 1px solid var(--color-light);
-			color: var(--color-primary);
-			padding: 0 0.5rem;
-		}
 
-		main {
-			grid-column: 2 / 3;
-			grid-row: 2 / 3;
-		}
+			a {
+				border: 1px solid var(--color-light);
+				color: var(--color-primary);
+				font-family: monospace;
+				padding: 0 0.5rem;
+				text-decoration: none;
+			}
 
-		footer {
-			align-items: center;
-			display: flex;
-			flex-direction: row;
-			flex-grow: 1;
-			grid-column: 2 / 3;
-			grid-row: 3;
-			justify-content: center;
-		}
+			code {
+				border: 1px solid var(--color-light);
+				color: var(--color-primary);
+				padding: 0 0.5rem;
+			}
 
-		header {
-			align-items: center;
-			display: flex;
-			flex-direction: row;
-			flex-grow: 1;
-			font-size: 3rem;
-			grid-column: 2 / 3;
-			grid-row: 1 / 2;
-			justify-content: center;
+			footer {
+				align-items: center;
+				display: flex;
+				flex-direction: row;
+				flex-grow: 1;
+				grid-column: 2 / 3;
+				grid-row: 3;
+				justify-content: center;
+			}
+
+			header {
+				align-items: center;
+				display: flex;
+				flex-direction: row;
+				flex-grow: 1;
+				font-size: 3rem;
+				grid-column: 2 / 3;
+				grid-row: 1 / 2;
+				justify-content: center;
+			}
+
+			main {
+				grid-column: 2 / 3;
+				grid-row: 2 / 3;
+			}
 		}
 	</style>
 	<body>
@@ -279,15 +273,15 @@ Promise.all([
 </html>`)
 		})
 
-		// TODO - grab player info from headers
 		// attack routes
 		app.post('/attack', async (req: Request, res: Response) => {
+			// TODO - grab player info from headers
 			const { name, player } = req.body
 
 			const normalizedBossQuery = String(name).toLowerCase().trim()
 
-			const p = playerService.statuses[player]
 			const boss = bossService.statuses[normalizedBossQuery]
+			const p = playerService.statuses[player]
 
 			if (!boss) {
 				res.status(400).json({ error: 'Boss not found' })
@@ -328,6 +322,7 @@ Promise.all([
 
 			res.status(201).json({
 				boss: bossService.statuses[normalizedBossQuery],
+				player: playerService.statuses[p.name],
 			})
 		})
 
@@ -455,7 +450,7 @@ Promise.all([
 		})
 		// below listener causes crash
 		// process.on('SIGKILL', (s) => {
-		//     onServerShutdown(server, s)
+		// 	onServerShutdown(server, s)
 		// })
 	})
 	.catch((err) => {
