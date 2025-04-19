@@ -1,4 +1,4 @@
 export type AttackResult = {
-    bossDamage: number
-    error?: string
+	bossDamage: number
+	error?: string
 }
