@@ -1,5 +1,5 @@
 import { Weapon } from '../enums'
-import type { ActivePlayer, Player } from '../types'
+import type { ActivePlayer, GameState, Player } from '../types'
 // import { readFileSync } from 'node:fs'
 // import { join } from 'node:path'
 
@@ -9,9 +9,8 @@ import playerData from '../../data/players.json'
 export type PlayerServiceType = {
     add: (name: string, selectedWeapon: Weapon) => Promise<void>
     clear: () => Promise<void>
-    load: (parsedGameState?: Record<string, unknown>) => Promise<void>
+    load: (parsedGameState?: GameState) => Promise<void>
     players: Player[]
-    search: (query: string) => Promise<Player | undefined>
     statuses: Record<string, ActivePlayer>
 }
 
@@ -21,7 +20,7 @@ export const PlayerService = () => {
 
     const add = (name: string, selectedWeapon: Weapon): Promise<void> => {
         const newPlayer: Player = {
-            name: name.toLowerCase(),
+            name,
             selectedWeapon,
             hp: 100,
             id: allPlayers.length,
@@ -42,22 +41,25 @@ export const PlayerService = () => {
         return Promise.resolve()
     }
 
-    const load = (parsedGameState?: Record<string, unknown>): Promise<void> => {
+    const load = (parsedGameState?: GameState): Promise<void> => {
         clear()
 
         // if saved game state, use it
         if (parsedGameState?.players) {
-            const parsedPlayers = parsedGameState.players as ActivePlayer[]
+            const parsedPlayers = parsedGameState.players as Record<
+                string,
+                ActivePlayer
+            >
 
-            parsedPlayers.forEach((p) => {
+            Object.entries(parsedPlayers).forEach(([k, v]) => {
                 allPlayers.push({
-                    hp: p.hp,
-                    id: p.id,
-                    name: p.name,
-                    selectedWeapon: p.selectedWeapon,
+                    hp: v.hp,
+                    id: v.id,
+                    name: v.name,
+                    selectedWeapon: v.selectedWeapon,
                 } as Player)
 
-                statuses[p.name] = p
+                statuses[v.name] = v
             })
 
             return Promise.resolve()
@@ -76,24 +78,11 @@ export const PlayerService = () => {
         return Promise.resolve()
     }
 
-    const search = (query: string): Promise<Player | undefined> => {
-        const normalizedQuery = query.toLowerCase().trim()
-
-        return Promise.resolve(
-            allPlayers.find(
-                (p) =>
-                    p.name.toLowerCase() === normalizedQuery ||
-                    p.id.toString() === normalizedQuery,
-            ),
-        )
-    }
-
     return {
         add,
         clear,
         load,
         players: allPlayers,
-        search,
         statuses,
     } as PlayerServiceType
 }

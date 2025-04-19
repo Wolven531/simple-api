@@ -1,5 +1,11 @@
 import { Weapon } from '../enums'
-import type { ActiveBoss, Boss, Player } from '../types'
+import type {
+    ActiveBoss,
+    AttackResult,
+    Boss,
+    GameState,
+    Player,
+} from '../types'
 // import { readFileSync } from 'node:fs'
 // import { join } from 'node:path'
 
@@ -12,14 +18,9 @@ export type BossServiceType = {
         bossName: string,
         player: Player,
         damage: number,
-    ) => Promise<
-        | {
-              error: string
-          }
-        | undefined
-    >
+    ) => Promise<AttackResult>
     clear: () => Promise<void>
-    load: (parsedGameState?: Record<string, unknown>) => Promise<void>
+    load: (parsedGameState?: GameState) => Promise<void>
     statuses: Record<string, ActiveBoss>
 }
 
@@ -32,12 +33,14 @@ export const BossService = () => {
         bossName: string,
         player: Player,
         damage: number,
-    ): Promise<{ error: string } | undefined> => {
+    ): Promise<AttackResult> => {
         const boss = statuses[bossName]
 
         if (boss.currentHp <= 0) {
             // res.status(400).json({ error: 'Boss already defeated' })
-            return Promise.reject({ error: 'Boss already defeated' })
+            return Promise.reject({
+                error: 'Boss already defeated',
+            } as AttackResult)
         }
 
         if (!boss.isStarted) {
@@ -71,7 +74,10 @@ export const BossService = () => {
             statuses[bossName].currentHp = 0
         }
 
-        return Promise.resolve(undefined)
+        return Promise.resolve({
+            bossDamage: boss.damage,
+            error: undefined,
+        } as AttackResult)
     }
 
     const clear = (): Promise<void> => {
@@ -80,7 +86,7 @@ export const BossService = () => {
         return Promise.resolve()
     }
 
-    const load = (parsedGameState?: Record<string, unknown>): Promise<void> => {
+    const load = (parsedGameState?: GameState): Promise<void> => {
         clear()
 
         // if saved game state, use it
@@ -111,7 +117,7 @@ export const BossService = () => {
         // use imported JSON instead of reading from file
         bossData.forEach((b: Boss) => {
             allBosses.push(b)
-            statuses[b.name.toLowerCase()] = {
+            statuses[b.name] = {
                 actions: [], // default empty
                 currentHp: b.hp,
                 damage: b.damage,
