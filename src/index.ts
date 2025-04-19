@@ -140,67 +140,142 @@ Promise.all([
 		app.use(express.json())
 		app.use(express.urlencoded({ extended: true }))
 
+		const pageTitle = 'Boss Fight API'
+
 		// !! Only setup routes if data loaded successfully
 		app.get('/', (req: Request, res: Response) => {
 			res.status(200).contentType('text/html').send(`
 <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Boss Fight API</title>
-    </head>
-    <body>
-        <h1>Welcome to the Boss Fight API</h1>
-        <h2>Boss</h2>
-        <ul>
-            <li>GET <a href="/boss">/boss</a> - Get all bosses</li>
-            <li>GET <code>/boss/:name</code> - Get boss by name
-                <ul>
-                    ${bossService.allBosses
-						.map(
-							(b) =>
-								`<li><a href="/boss/${b.name}">${b.name}</a></li>`,
-						)
-						.join('')}
-                </ul>
-            </li>
-            <li>POST <code>/attack</code> - Attack a boss</li>
-        </ul>
-        <h2>Player</h2>
-        <ul>
-            <li>GET <a href="/player">/player</a> - Get all players</li>
-            <li>GET <code>/player/:idOrName</code> - Get player by name
-                <ul>
-                    ${playerService.players
-						.map(
-							(p) =>
-								`<li><a href="/player/${p.name}">${p.name}</a></li>`,
-						)
-						.join('')}
-                </ul>
-            </li>
-            <li>POST <code>/player</code> - Create a new player</li>
-        </ul>
-        <h2>Weapons</h2>
-        <ul>
-            <li>GET <code>/weapon/:idOrName</code> Get weapon
-                <ul>
-                    ${Object.entries(Weapon)
-						.filter(
-							([key, val]) =>
-								weaponDamage[val as unknown as Weapon] !==
-								undefined,
-						)
-						.map(
-							([key, val]) =>
-								`<li><a href="/weapon/${val}">${
-									Weapon[val as any]
-								}</a> (${weaponDamage[val as Weapon]})</li>`,
-						)
-						.join('')}
-                </ul>
-            </li>
-        </ul>
-    </body>
+<html>
+	<head>
+		<title>${pageTitle}</title>
+	</head>
+	<style>
+		:root {
+			--color-primary: #0aa;
+			--color-dark: #eee;
+			--color-light: #333;
+		}
+
+		@media (prefers-color-scheme: dark) {
+			:root {
+				--color-primary: #0cc;
+				--color-dark: #333;
+				--color-light: #ccc;
+			}
+		}
+
+		body {
+			background-color: var(--color-dark);
+			color: var(--color-light);
+			display: grid;
+			font-family: Arial, sans-serif;
+			grid-template-columns: 1fr 10fr 1fr;
+			grid-template-rows: 5rem 1fr 3rem;
+			margin: 0;
+			padding: 0;
+		}
+		
+		a {
+			border: 1px solid var(--color-light);
+			color: var(--color-primary);
+			font-family: monospace;
+			padding: 0 0.5rem;
+			text-decoration: none;
+		}
+		
+		code {
+			border: 1px solid var(--color-light);
+			color: var(--color-primary);
+			padding: 0 0.5rem;
+		}
+
+		main {
+			grid-column: 2 / 3;
+			grid-row: 2 / 3;
+		}
+
+		footer {
+			align-items: center;
+			display: flex;
+			flex-direction: row;
+			flex-grow: 1;
+			grid-column: 2 / 3;
+			grid-row: 3;
+			justify-content: center;
+		}
+
+		header {
+			align-items: center;
+			display: flex;
+			flex-direction: row;
+			flex-grow: 1;
+			font-size: 3rem;
+			grid-column: 2 / 3;
+			grid-row: 1 / 2;
+			justify-content: center;
+		}
+	</style>
+	<body>
+		<header>${pageTitle}</header>
+		<main>
+			<h2>Boss</h2>
+			<ul>
+				<li>GET <a href="/boss">/boss</a> - Get all bosses</li>
+				<li>GET <code>/boss/:name</code> - Get boss by name
+					<ul>
+						${bossService.allBosses
+							.map(
+								(b) =>
+									`<li><a href="/boss/${b.name}">${b.name}</a></li>`,
+							)
+							.join('')}
+					</ul>
+				</li>
+				<li>POST <code>/attack</code> - Attack a boss</li>
+			</ul>
+			<h2>Player</h2>
+			<ul>
+				<li>GET <a href="/player">/player</a> - Get all players</li>
+				<li>GET <code>/player/:idOrName</code> - Get player by name
+					<ul>
+						${playerService.players
+							.map(
+								(p) =>
+									`<li><a href="/player/${p.name}">${p.name}</a></li>`,
+							)
+							.join('')}
+					</ul>
+				</li>
+				<li>POST <code>/player</code> - Create a new player</li>
+			</ul>
+			<h2>Weapons</h2>
+			<ul>
+				<li>GET <code>/weapon/:idOrName</code> Get weapon
+					<ul>
+						${Object.entries(Weapon)
+							.filter(
+								([key, val]) =>
+									weaponDamage[val as unknown as Weapon] !==
+									undefined,
+							)
+							.map(
+								([key, val]) =>
+									`<li><a href="/weapon/${val}">${
+										Weapon[val as any]
+									}</a> (${
+										weaponDamage[val as Weapon]
+									})</li>`,
+							)
+							.join('')}
+					</ul>
+				</li>
+			</ul>
+		</main>
+		<footer>
+			<p>Created by <a href="https://github.com/wolven531">Wolven531</a> &copy; 2025</p>
+		</footer>
+	</body>
 </html>`)
 		})
 
