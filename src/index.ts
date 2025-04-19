@@ -10,7 +10,7 @@ import {
 import { Weapon } from './enums'
 import { BossService } from './services/BossService'
 import { PlayerService } from './services/PlayerService'
-import type { AttackResult, GameState } from './types'
+import type { ActiveBoss, AttackResult, GameState } from './types'
 import { generateDocs, log } from './utils'
 
 // grab port from env or default to 3000
@@ -219,11 +219,16 @@ Promise.all([
 			res.status(200).json(bossService.statuses)
 		})
 
-		app.get('/boss/:name', (req: Request, res: Response) => {
-			const normalizedBossQuery = String(req.params.name)
+		app.get('/boss/:idOrName', (req: Request, res: Response) => {
+			const normalizedBossQuery = String(req.params.idOrName)
 				.toLowerCase()
 				.trim()
-			const boss = bossService.statuses[normalizedBossQuery]
+
+			const [, boss] = Object.entries(bossService.statuses).find(
+				([bossName, activeBoss]) =>
+					bossName.includes(normalizedBossQuery) ||
+					activeBoss.id.toString().includes(normalizedBossQuery),
+			) as [string, ActiveBoss]
 
 			boss
 				? res.status(200).json(boss)
