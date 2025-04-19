@@ -69,13 +69,20 @@ const onServerStart = () => {
 	timerEnergy = setInterval(() => {
 		log(`Energy timer tick`)
 
-		playerService.restoreEnergy()
+		playerService
+			.restoreEnergy()
+			.then(() => {
+				lastEnergyRestore = new Date()
+			})
+			.catch((err) => log(err, true))
 	}, ENERGY_TIMER_MS)
 
 	timerSave = setInterval(() => {
 		log(`Save timer tick`)
 
 		saveToDisk()
+
+		lastSave = new Date()
 	}, SAVE_TIMER_MS)
 
 	log(`Server is running on port ${port}`)
@@ -91,28 +98,26 @@ const saveToDisk = () => {
 		})
 	}
 
+	const saveData: GameState = {
+		bosses: bossService.statuses,
+		lastEnergyRestore: lastEnergyRestore?.getTime() ?? Date.now(),
+		lastSave: lastSave?.getTime() ?? Date.now(),
+		players: playerService.statuses,
+		version: 1,
+	}
+
 	// create save file
-	writeFileSync(
-		savePath,
-		JSON.stringify(
-			{
-				bosses: bossService.statuses,
-				players: playerService.statuses,
-				version: 1,
-			} as GameState,
-			null,
-			2,
-		),
-		{
-			encoding: 'utf-8',
-			mode: PERMS_READ_WRITE_EXEC,
-		},
-	)
+	writeFileSync(savePath, JSON.stringify(saveData, null, 2), {
+		encoding: 'utf-8',
+		mode: PERMS_READ_WRITE_EXEC,
+	})
 }
 
 let parsedGameState: GameState | undefined = undefined
 let timerEnergy: NodeJS.Timeout | undefined = undefined
 let timerSave: NodeJS.Timeout | undefined = undefined
+let lastEnergyRestore: Date  = new Date()
+let lastSave: Date  = new Date()
 
 // load save file (if exists)
 if (existsSync(savePath)) {
@@ -239,6 +244,10 @@ Promise.all([
 					</ul>
 				</li>
 				<li>POST <code>/player</code> - Create a new player</li>
+			</ul>
+			<h2>Timers</h2>
+			<ul>
+				<li>GET <a href="/timer">/timer</a> - Get timer info</li>
 			</ul>
 			<h2>Weapons</h2>
 			<ul>
@@ -393,6 +402,18 @@ Promise.all([
 			playerService.add(name, selectedWeapon)
 
 			res.status(201).json(playerService.statuses[name])
+		})
+
+		// timer routes
+		app.get('/timer', (req: Request, res: Response) => {
+			res.status(200).json({
+				energyTimer: ENERGY_TIMER_MS,
+				lastEnergyRestore: lastEnergyRestore.toISOString(),
+				lastEnergyRestoreTimestamp: lastEnergyRestore.getTime(),
+				lastSave: lastSave.toISOString(),
+				lastSaveTimestamp: lastSave.getTime(),
+				saveTimer: SAVE_TIMER_MS,
+			})
 		})
 
 		// weapon routes
