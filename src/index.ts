@@ -6,7 +6,7 @@ import { ENERGY_TIMER_MS, PERMS_READ_WRITE_EXEC } from './constants'
 import { Weapon } from './enums'
 import { BossService } from './services/BossService'
 import { PlayerService } from './services/PlayerService'
-import type { GameState } from './types'
+import type { AttackResult, GameState } from './types'
 
 // grab port from env or default to 3000
 const port = process.env.PORT ?? 3000
@@ -201,11 +201,14 @@ Promise.all([
                 return
             }
 
-            const attackResult = await bossService.attack(
-                normalizedBossQuery,
-                p,
-                weaponDamage[p.selectedWeapon],
-            )
+            if (p.currentEnergy <= 0) {
+                res.status(400).json({ error: 'Not enough energy' })
+                return
+            }
+
+            const attackResult: AttackResult = await bossService
+                .attack(normalizedBossQuery, p, weaponDamage[p.selectedWeapon])
+                .catch((err) => err)
 
             if (attackResult?.error) {
                 res.status(400).json(attackResult)
