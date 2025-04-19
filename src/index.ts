@@ -262,17 +262,27 @@ Promise.all([
 
         app.get('/player/:idOrName', async (req: Request, res: Response) => {
             const normalizedPlayerQuery = String(req.params.idOrName)
-            const player = playerService.statuses[normalizedPlayerQuery]
+                .toLowerCase()
+                .trim()
 
-            playerService.statuses[normalizedPlayerQuery]
-                ? res.status(200).json({
-                      ...player,
-                      selectedWeaponDamage: weaponDamage[player.selectedWeapon],
-                      selectedWeaponName: Weapon[player.selectedWeapon],
-                  })
-                : res.status(404).send({
-                      error: 'Player not found',
-                  })
+            const player = playerService.players.find(
+                (p) =>
+                    p.id.toString().includes(normalizedPlayerQuery) ||
+                    p.name.toLowerCase().includes(normalizedPlayerQuery),
+            )
+
+            if (!player) {
+                res.status(404).send({ error: 'Player not found' })
+                return
+            }
+
+            const status = playerService.statuses[player.name]
+
+            res.status(200).json({
+                ...status,
+                selectedWeaponDamage: weaponDamage[player.selectedWeapon],
+                selectedWeaponName: Weapon[player.selectedWeapon],
+            })
         })
 
         app.post('/player', async (req: Request, res: Response) => {
