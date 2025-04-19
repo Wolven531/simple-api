@@ -1,0 +1,62 @@
+[
+    {
+        "name": "rat",
+        "hp": 17,
+        "damage": 1,
+        "defense": 0
+    },
+    {
+        "name": "goblin",
+        "hp": 25,
+        "damage": 3,
+        "defense": 1
+    },
+    {
+        "name": "orc",
+        "hp": 40,
+        "damage": 5,
+        "defense": 2
+    },
+    {
+        "name": "troll",
+        "hp": 60,
+        "damage": 8,
+        "defense": 3
+    },
+    {
+        "name": "ogre",
+        "hp": 80,
+        "damage": 10,
+        "defense": 4
+    },
+    {
+        "name": "giant",
+        "hp": 100,
+        "damage": 12,
+        "defense": 5
+    },
+    {
+        "name": "lich",
+        "hp": 120,
+        "damage": 15,
+        "defense": 6
+    },
+    {
+        "name": "dragon",
+        "hp": 150,
+        "damage": 20,
+        "defense": 8
+    },
+    {
+        "name": "demon",
+        "hp": 200,
+        "damage": 25,
+        "defense": 10
+    },
+    {
+        "name": "titan",
+        "hp": 300,
+        "damage": 30,
+        "defense": 12
+    }
+]
