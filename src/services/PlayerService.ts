@@ -11,6 +11,7 @@ export type PlayerServiceType = {
     add: (name: string, selectedWeapon: Weapon) => Promise<void>
     clear: () => Promise<void>
     load: (parsedGameState?: GameState) => Promise<void>
+    restoreEnergy: () => Promise<void>
     players: Player[]
     statuses: Record<string, ActivePlayer>
 }
@@ -86,11 +87,27 @@ export const PlayerService = () => {
         return Promise.resolve()
     }
 
+    const restoreEnergy = (): Promise<void> => {
+        Object.entries(statuses).forEach(([playerName, player]) => {
+            if (player.currentEnergy < player.energy) {
+                const newEnergy = player.currentEnergy + 1
+                console.info(
+                    `Incrementing energy for ${playerName} to ${newEnergy}`,
+                )
+
+                player.currentEnergy = newEnergy
+            }
+        })
+
+        return Promise.resolve()
+    }
+
     return {
         add,
         clear,
         load,
         players: allPlayers,
+        restoreEnergy,
         statuses,
     } as PlayerServiceType
 }
