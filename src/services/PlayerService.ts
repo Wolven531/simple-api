@@ -1,6 +1,7 @@
 import { DEFAULT_ENERGY, DEFAULT_HP } from '../constants'
 import { Weapon } from '../enums'
 import type { ActivePlayer, GameState, Player } from '../types'
+import { log } from '../utils'
 // import { readFileSync } from 'node:fs'
 // import { join } from 'node:path'
 
@@ -88,16 +89,32 @@ export const PlayerService = () => {
 	}
 
 	const restoreEnergy = (): Promise<void> => {
-		Object.entries(statuses).forEach(([playerName, player]) => {
+		const coll = Object.entries(statuses)
+
+		const updateEnergy = ([playerName, player]: [string, ActivePlayer]) => {
 			if (player.currentEnergy < player.energy) {
 				const newEnergy = player.currentEnergy + 1
-				console.info(
-					`Incrementing energy for ${playerName} to ${newEnergy}`,
-				)
+				log(`Incrementing energy for ${playerName} to ${newEnergy}`)
 
 				player.currentEnergy = newEnergy
 			}
-		})
+		}
+
+		// const startTime = performance.now()
+		coll.forEach(updateEnergy)
+		// const endTime = performance.now()
+
+		// const startTime2 = performance.now()
+		// for (const [playerName, player] of coll) {
+		// 	updateEnergy([playerName, player])
+		// }
+		// const endTime2 = performance.now()
+
+		// log(
+		// 	`forEach time (micro): ${
+		// 		endTime - startTime
+		// 	}; for-of time (micro): ${endTime2 - startTime2}`,
+		// )
 
 		return Promise.resolve()
 	}

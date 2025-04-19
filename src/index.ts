@@ -11,6 +11,7 @@ import { Weapon } from './enums'
 import { BossService } from './services/BossService'
 import { PlayerService } from './services/PlayerService'
 import type { AttackResult, GameState } from './types'
+import { log } from './utils'
 
 // grab port from env or default to 3000
 const port = process.env.PORT ?? 3000
@@ -47,8 +48,8 @@ const weaponDamage: Record<Weapon, number> = {
 }
 
 const onServerShutdown = (server: Server, sig: NodeJS.Signals) => {
-	console.info(`Received signal: ${sig}`)
-	console.info('HTTP server is shutting down...')
+	log(`Received signal: ${sig}`)
+	log('HTTP server is shutting down...')
 
 	if (timerEnergy) {
 		clearInterval(timerEnergy as NodeJS.Timeout)
@@ -60,32 +61,28 @@ const onServerShutdown = (server: Server, sig: NodeJS.Signals) => {
 	saveToDisk()
 
 	server.close(() => {
-		console.log('HTTP server closed')
+		log('HTTP server closed')
 	})
 }
 
 const onServerStart = () => {
 	timerEnergy = setInterval(() => {
-		const d = new Date().toUTCString()
-
-		console.info(`[${d}] Energy timer tick`)
+		log(`Energy timer tick`)
 
 		playerService.restoreEnergy()
 	}, ENERGY_TIMER_MS)
 
 	timerSave = setInterval(() => {
-		const d = new Date().toUTCString()
-
-		console.info(`[${d}] Save timer tick`)
+		log(`Save timer tick`)
 
 		saveToDisk()
 	}, SAVE_TIMER_MS)
 
-	console.log(`Server is running on port ${port}`)
+	log(`Server is running on port ${port}`)
 }
 
 const saveToDisk = () => {
-	console.info('Saving game state to disk...')
+	log('Saving game state to disk...')
 
 	// create save dir if missing
 	if (!existsSync(saveDir)) {
@@ -454,9 +451,9 @@ Promise.all([
 		// })
 	})
 	.catch((err) => {
-		console.error('Error loading data from disk')
-		console.error(err)
-		console.error('Exiting...')
+		log('Error loading data from disk', true)
+		log(err, true)
+		log('Exiting...', true)
 
 		process.exit(1)
 	})
