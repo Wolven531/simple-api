@@ -123,6 +123,7 @@ export const BossService = () => {
 				damage: b.damage,
 				defense: b.defense,
 				hp: b.hp,
+				id: b.id,
 				isDefeated: false, // default false
 				isStarted: false, // default false
 				name: b.name,
