@@ -6,6 +6,23 @@ import type { ActiveBoss, Boss, Player } from '../types'
 // data
 import bossData from '../../data/bosses.json'
 
+export type BossServiceType = {
+    allBosses: Boss[]
+    attack: (
+        bossName: string,
+        player: Player,
+        damage: number,
+    ) => Promise<
+        | {
+              error: string
+          }
+        | undefined
+    >
+    clear: () => Promise<void>
+    load: () => Promise<void>
+    statuses: Record<string, ActiveBoss>
+}
+
 export const BossService = () => {
     const allBosses: Boss[] = []
     const statuses: Record<string, ActiveBoss> = {}
@@ -15,12 +32,12 @@ export const BossService = () => {
         bossName: string,
         player: Player,
         damage: number,
-    ): { error: string } | undefined => {
+    ): Promise<{ error: string } | undefined> => {
         const boss = statuses[bossName]
 
         if (boss.currentHp <= 0) {
             // res.status(400).json({ error: 'Boss already defeated' })
-            return { error: 'Boss already defeated' }
+            return Promise.reject({ error: 'Boss already defeated' })
         }
 
         if (!boss.isStarted) {
@@ -53,13 +70,17 @@ export const BossService = () => {
         if (statuses[bossName].currentHp <= 0) {
             statuses[bossName].currentHp = 0
         }
+
+        return Promise.resolve(undefined)
     }
 
-    const clear = () => {
+    const clear = (): Promise<void> => {
         allBosses.length = 0
+
+        return Promise.resolve()
     }
 
-    const load = () => {
+    const load = (): Promise<void> => {
         clear()
 
         // const bossesPath = join(__dirname, '../../data/bosses.json')
@@ -78,6 +99,8 @@ export const BossService = () => {
                 name: b.name,
             } as ActiveBoss
         })
+
+        return Promise.resolve()
     }
 
     return {
@@ -86,7 +109,7 @@ export const BossService = () => {
         clear,
         load,
         statuses,
-    }
+    } as BossServiceType
 }
 
 export default BossService
