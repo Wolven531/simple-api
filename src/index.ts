@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { Server } from 'node:http'
 import { resolve } from 'node:path'
+import { ENERGY_TIMER_MS, PERMS_READ_WRITE_EXEC } from './constants'
 import { Weapon } from './enums'
 import { BossService } from './services/BossService'
 import { PlayerService } from './services/PlayerService'
@@ -40,6 +42,56 @@ const weaponDamage: Record<Weapon, number> = {
     [Weapon.Laser]: 40000,
 }
 
+const onServerShutdown = (server: Server, sig: NodeJS.Signals) => {
+    console.info(`Received signal: ${sig}`)
+    console.info('HTTP server is shutting down...')
+
+    if (energyTimer) {
+        clearInterval(energyTimer as NodeJS.Timeout)
+    }
+
+    server.close(() => {
+        console.log('HTTP server closed')
+    })
+
+    // create save dir if missing
+    if (!existsSync(saveDir)) {
+        mkdirSync(saveDir, {
+            mode: PERMS_READ_WRITE_EXEC,
+        })
+    }
+
+    // create save file
+    writeFileSync(
+        savePath,
+        JSON.stringify(
+            {
+                bosses: bossService.statuses,
+                players: playerService.statuses,
+                version: 1,
+            } as GameState,
+            null,
+            2,
+        ),
+        {
+            encoding: 'utf-8',
+            mode: PERMS_READ_WRITE_EXEC,
+        },
+    )
+}
+
+const onServerStart = () => {
+    energyTimer = setInterval(() => {
+        const d = new Date().toUTCString()
+
+        console.info(`[${d}] Energy timer tick`)
+        playerService.restoreEnergy()
+    }, ENERGY_TIMER_MS)
+
+    console.log(`Server is running on port ${port}`)
+}
+
+let energyTimer: NodeJS.Timeout | undefined = undefined
 let parsedGameState: GameState | undefined = undefined
 
 // load save file (if exists)
@@ -160,9 +212,15 @@ Promise.all([
                 return
             }
 
+            const enegeryBeforeAttack =
+                playerService.statuses[p.name].currentEnergy
+            const enegeryAfterAttack = enegeryBeforeAttack - 1
             const hpBeforeAttack = playerService.statuses[p.name].currentHp
             const hpAfterAttack = hpBeforeAttack - attackResult.bossDamage
 
+            // if attack results in negative energy, set to 0; otherwise subtract energy
+            playerService.statuses[p.name].currentEnergy =
+                enegeryAfterAttack < 0 ? 0 : enegeryAfterAttack
             // if attack results in negative hp, set to 0; otherwise subtract damage
             playerService.statuses[p.name].currentHp =
                 hpAfterAttack < 0 ? 0 : hpAfterAttack
@@ -273,54 +331,21 @@ Promise.all([
         })
 
         // startup server
-        const server = app.listen(port, () => {
-            if (parsedGameState) {
-                console.debug('Loaded game state from disk')
-                // console.debug(JSON.stringify(parsedGameState, null, 2))
-            }
+        const server = app.listen(port, onServerStart)
 
-            console.log(`Server is running on port ${port}`)
+        process.on('SIGBREAK', (s) => {
+            onServerShutdown(server, s)
         })
-
-        const handleServerShutdown = (s: NodeJS.Signals) => {
-            console.debug(`Received signal: ${s}`)
-            console.debug('HTTP server is shutting down...')
-
-            server.close(() => {
-                console.debug('HTTP server closed')
-            })
-
-            // create save dir if missing
-            if (!existsSync(saveDir)) {
-                mkdirSync(saveDir, {
-                    mode: 0o777,
-                })
-            }
-
-            // create save file
-            writeFileSync(
-                savePath,
-                JSON.stringify(
-                    {
-                        bosses: bossService.statuses,
-                        players: playerService.statuses,
-                        version: 1,
-                    } as GameState,
-                    null,
-                    2,
-                ),
-                {
-                    encoding: 'utf-8',
-                    mode: 0o777,
-                },
-            )
-        }
-
-        process.on('SIGBREAK', handleServerShutdown)
-        process.on('SIGINT', handleServerShutdown)
-        process.on('SIGTERM', handleServerShutdown)
+        process.on('SIGINT', (s) => {
+            onServerShutdown(server, s)
+        })
+        process.on('SIGTERM', (s) => {
+            onServerShutdown(server, s)
+        })
         // below listener causes crash
-        // process.on('SIGKILL', handleServerShutdown)
+        // process.on('SIGKILL', (s) => {
+        //     onServerShutdown(server, s)
+        // })
     })
     .catch((err) => {
         console.error('Error loading data from disk')
