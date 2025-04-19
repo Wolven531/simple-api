@@ -17,3 +17,8 @@ export const ENERGY_TIMER_MS = 60 * 1000 // 1 minute
  * @description File permissions used when reading game files
  */
 export const PERMS_READ_WRITE_EXEC = 0o777
+
+/**
+ * @description Time (in milliseconds) to wait before saving to disk
+ */
+export const SAVE_TIMER_MS = 60 * 1000 // 1 minute
