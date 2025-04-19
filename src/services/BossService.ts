@@ -1,7 +1,7 @@
-// import { readFileSync } from 'fs'
-// import { join } from 'path'
 import { Weapon } from '../enums'
 import type { ActiveBoss, Boss, Player } from '../types'
+// import { readFileSync } from 'node:fs'
+// import { join } from 'node:path'
 
 // data
 import bossData from '../../data/bosses.json'
@@ -19,7 +19,7 @@ export type BossServiceType = {
         | undefined
     >
     clear: () => Promise<void>
-    load: () => Promise<void>
+    load: (parsedGameState?: Record<string, unknown>) => Promise<void>
     statuses: Record<string, ActiveBoss>
 }
 
@@ -80,22 +80,45 @@ export const BossService = () => {
         return Promise.resolve()
     }
 
-    const load = (): Promise<void> => {
+    const load = (parsedGameState?: Record<string, unknown>): Promise<void> => {
         clear()
 
+        // if saved game state, use it
+        if (parsedGameState?.bosses) {
+            const parsedBosses = parsedGameState.bosses as Record<
+                string,
+                ActiveBoss
+            >
+
+            Object.entries(parsedBosses).forEach(([k, v]) => {
+                allBosses.push({
+                    damage: v.damage,
+                    defense: v.defense,
+                    hp: v.hp,
+                    name: v.name,
+                } as Boss)
+
+                statuses[k] = v
+            })
+
+            return Promise.resolve()
+        }
+
+        // otherwise, load from file data
         // const bossesPath = join(__dirname, '../../data/bosses.json')
         // const bossData: Boss[] = JSON.parse(readFileSync(bossesPath, 'utf8'))
 
+        // use imported JSON instead of reading from file
         bossData.forEach((b: Boss) => {
             allBosses.push(b)
             statuses[b.name.toLowerCase()] = {
-                actions: [],
+                actions: [], // default empty
                 currentHp: b.hp,
                 damage: b.damage,
                 defense: b.defense,
                 hp: b.hp,
-                isDefeated: false,
-                isStarted: false,
+                isDefeated: false, // default false
+                isStarted: false, // default false
                 name: b.name,
             } as ActiveBoss
         })
