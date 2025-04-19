@@ -1,6 +1,7 @@
 export * from './ActionAgainstBoss'
 export * from './ActiveBoss'
 export * from './ActivePlayer'
+export * from './AttackResult'
 export * from './Boss'
 export * from './GameState'
 export * from './Player'
