@@ -67,72 +67,66 @@ Promise.all([
 
         // !! Only setup routes if data loaded successfully
         app.get('/', (req: Request, res: Response) => {
-            res.status(200)
-                .contentType('text/html')
-                .send(
-                    `<!DOCTYPE html>
-            <html>
-            <head>
-                <title>Boss Fight API</title>
-            </head>
-            <body>
-                <h1>Welcome to the Boss Fight API</h1>
-                <h2>Boss</h2>
+            res.status(200).contentType('text/html').send(`
+<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Boss Fight API</title>
+    </head>
+    <body>
+        <h1>Welcome to the Boss Fight API</h1>
+        <h2>Boss</h2>
+        <ul>
+            <li>GET <a href="/boss">/boss</a> - Get all bosses</li>
+            <li>GET <code>/boss/:name</code> - Get boss by name
                 <ul>
-                    <li>GET <a href="/boss">/boss</a> - Get all bosses</li>
-                    <li>GET <code>/boss/:name</code> - Get boss by name
-                        <ul>
-                            ${bossService.allBosses
-                                .map(
-                                    (b) =>
-                                        `<li><a href="/boss/${b.name}">${b.name}</a></li>`,
-                                )
-                                .join('')}
-                        </ul>
-                    </li>
-                    <li>GET <code>/attack/:name/:player</code> - Attack a boss</li>
+                    ${bossService.allBosses
+                        .map(
+                            (b) =>
+                                `<li><a href="/boss/${b.name}">${b.name}</a></li>`,
+                        )
+                        .join('')}
                 </ul>
-                <h2>Player</h2>
+            </li>
+            <li>POST <code>/attack</code> - Attack a boss</li>
+        </ul>
+        <h2>Player</h2>
+        <ul>
+            <li>GET <a href="/player">/player</a> - Get all players</li>
+            <li>GET <code>/player/:idOrName</code> - Get player by name
                 <ul>
-                    <li>GET <a href="/player">/player</a> - Get all players</li>
-                    <li>GET <code>/player/:name</code> - Get player by name
-                        <ul>
-                            ${playerService.players
-                                .map(
-                                    (p) =>
-                                        `<li><a href="/player/${p.name}">${p.name}</a></li>`,
-                                )
-                                .join('')}
-                        </ul>
-                    </li>
-                    <li>POST <code>/player</code> - Create a new player</li>
+                    ${playerService.players
+                        .map(
+                            (p) =>
+                                `<li><a href="/player/${p.name}">${p.name}</a></li>`,
+                        )
+                        .join('')}
                 </ul>
-                <h2>Weapons</h2>
+            </li>
+            <li>POST <code>/player</code> - Create a new player</li>
+        </ul>
+        <h2>Weapons</h2>
+        <ul>
+            <li>GET <code>/weapon/:idOrName</code> Get weapon
                 <ul>
-                    <li>GET <code>/weapon/:weaponId</code> Get weapon
-                        <ul>
-                            ${Object.entries(Weapon)
-                                .filter(
-                                    ([key, val]) =>
-                                        weaponDamage[
-                                            val as unknown as Weapon
-                                        ] !== undefined,
-                                )
-                                .map(
-                                    ([key, val]) =>
-                                        `<li><a href="/weapon/${val}">${
-                                            Weapon[val as any]
-                                        }</a> (${
-                                            weaponDamage[val as Weapon]
-                                        })</li>`,
-                                )
-                                .join('')}
-                        </ul>
-                    </li>
+                    ${Object.entries(Weapon)
+                        .filter(
+                            ([key, val]) =>
+                                weaponDamage[val as unknown as Weapon] !==
+                                undefined,
+                        )
+                        .map(
+                            ([key, val]) =>
+                                `<li><a href="/weapon/${val}">${
+                                    Weapon[val as any]
+                                }</a> (${weaponDamage[val as Weapon]})</li>`,
+                        )
+                        .join('')}
                 </ul>
-            </body>
-        </html>`,
-                )
+            </li>
+        </ul>
+    </body>
+</html>`)
         })
 
         // TODO - grab player info from headers
