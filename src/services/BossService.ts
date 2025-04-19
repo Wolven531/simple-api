@@ -34,13 +34,15 @@ export const BossService = () => {
             statuses[bossName].isStarted = true
         }
 
+        const description = `Player ${
+            player.name
+        } attacked boss ${bossName} using ${
+            Weapon[player.selectedWeapon]
+        } for ${damage} damage`
+
         statuses[bossName].actions.push({
             action: 'attack',
-            description: `Player ${
-                player.name
-            } attacked boss ${bossName} using ${
-                Weapon[player.selectedWeapon]
-            } for ${damage} damage`,
+            description,
             field: 'currentHp',
             user: player.name,
             value: damage,
@@ -63,7 +65,7 @@ export const BossService = () => {
         // const bossesPath = join(__dirname, '../../data/bosses.json')
         // const bossData: Boss[] = JSON.parse(readFileSync(bossesPath, 'utf8'))
 
-        bossData.forEach((b) => {
+        bossData.forEach((b: Boss) => {
             allBosses.push(b)
             statuses[b.name.toLowerCase()] = {
                 actions: [],
@@ -74,7 +76,7 @@ export const BossService = () => {
                 isDefeated: false,
                 isStarted: false,
                 name: b.name,
-            }
+            } as ActiveBoss
         })
     }
 
