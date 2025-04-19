@@ -113,11 +113,11 @@ const saveToDisk = () => {
 	})
 }
 
+let lastEnergyRestore: Date = new Date()
+let lastSave: Date = new Date()
 let parsedGameState: GameState | undefined = undefined
 let timerEnergy: NodeJS.Timeout | undefined = undefined
 let timerSave: NodeJS.Timeout | undefined = undefined
-let lastEnergyRestore: Date = new Date()
-let lastSave: Date = new Date()
 
 // load save file (if exists)
 if (existsSync(savePath)) {
