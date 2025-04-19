@@ -12,3 +12,8 @@ export const DEFAULT_HP = 100
  * player
  */
 export const ENERGY_TIMER_MS = 60 * 1000 // 1 minute
+
+/**
+ * @description File permissions used when reading game files
+ */
+export const PERMS_READ_WRITE_EXEC = 0o777
