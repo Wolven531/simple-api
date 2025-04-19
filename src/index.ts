@@ -154,6 +154,13 @@ Promise.all([
 			res.status(200).contentType('text/html').send(docHtml)
 		})
 
+		app.get('/favicon.ico', (req: Request, res: Response) => {
+			res.status(200).contentType('image/svg+xml').send(`
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+	<circle cx="50" cy="50" r="47.5"  fill="#0ff" stroke="#00f" stroke-width="5" />
+</svg>`)
+		})
+
 		// attack routes
 		app.post('/attack', async (req: Request, res: Response) => {
 			// TODO - grab player info from headers
