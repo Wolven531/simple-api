@@ -2,7 +2,11 @@ import express, { Request, Response } from 'express'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { Server } from 'node:http'
 import { resolve } from 'node:path'
-import { ENERGY_TIMER_MS, PERMS_READ_WRITE_EXEC } from './constants'
+import {
+    ENERGY_TIMER_MS,
+    PERMS_READ_WRITE_EXEC,
+    SAVE_TIMER_MS,
+} from './constants'
 import { Weapon } from './enums'
 import { BossService } from './services/BossService'
 import { PlayerService } from './services/PlayerService'
@@ -46,13 +50,42 @@ const onServerShutdown = (server: Server, sig: NodeJS.Signals) => {
     console.info(`Received signal: ${sig}`)
     console.info('HTTP server is shutting down...')
 
-    if (energyTimer) {
-        clearInterval(energyTimer as NodeJS.Timeout)
+    if (timerEnergy) {
+        clearInterval(timerEnergy as NodeJS.Timeout)
     }
+    if (timerSave) {
+        clearInterval(timerSave as NodeJS.Timeout)
+    }
+
+    saveToDisk()
 
     server.close(() => {
         console.log('HTTP server closed')
     })
+}
+
+const onServerStart = () => {
+    timerEnergy = setInterval(() => {
+        const d = new Date().toUTCString()
+
+        console.info(`[${d}] Energy timer tick`)
+
+        playerService.restoreEnergy()
+    }, ENERGY_TIMER_MS)
+
+    timerSave = setInterval(() => {
+        const d = new Date().toUTCString()
+
+        console.info(`[${d}] Save timer tick`)
+
+        saveToDisk()
+    }, SAVE_TIMER_MS)
+
+    console.log(`Server is running on port ${port}`)
+}
+
+const saveToDisk = () => {
+    console.info('Saving game state to disk...')
 
     // create save dir if missing
     if (!existsSync(saveDir)) {
@@ -80,19 +113,9 @@ const onServerShutdown = (server: Server, sig: NodeJS.Signals) => {
     )
 }
 
-const onServerStart = () => {
-    energyTimer = setInterval(() => {
-        const d = new Date().toUTCString()
-
-        console.info(`[${d}] Energy timer tick`)
-        playerService.restoreEnergy()
-    }, ENERGY_TIMER_MS)
-
-    console.log(`Server is running on port ${port}`)
-}
-
-let energyTimer: NodeJS.Timeout | undefined = undefined
 let parsedGameState: GameState | undefined = undefined
+let timerEnergy: NodeJS.Timeout | undefined = undefined
+let timerSave: NodeJS.Timeout | undefined = undefined
 
 // load save file (if exists)
 if (existsSync(savePath)) {
