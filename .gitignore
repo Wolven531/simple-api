@@ -1,2 +1,4 @@
 node_modules
 dist
+
+save-data/currentState.json
