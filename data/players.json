@@ -1,0 +1,26 @@
+[
+    {
+        "hp": 100,
+        "id": 1,
+        "name": "Wolven531",
+        "selectedWeapon": 1
+    },
+    {
+        "hp": 100,
+        "id": 2,
+        "name": "Zorven",
+        "selectedWeapon": 19
+    },
+    {
+        "hp": 100,
+        "id": 3,
+        "name": "Merlin",
+        "selectedWeapon": 11
+    },
+    {
+        "hp": 100,
+        "id": 4,
+        "name": "RoughNick",
+        "selectedWeapon": 0
+    }
+]
