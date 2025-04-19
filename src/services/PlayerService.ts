@@ -1,63 +1,77 @@
 import { Weapon } from '../enums'
-import type { Player } from '../types'
+import type { ActivePlayer, Player } from '../types'
+// import { readFileSync } from 'node:fs'
+// import { join } from 'node:path'
+
+// data
+import playerData from '../../data/players.json'
 
 export type PlayerServiceType = {
     add: (name: string, selectedWeapon: Weapon) => Promise<void>
     clear: () => Promise<void>
-    load: () => Promise<void>
+    load: (parsedGameState?: Record<string, unknown>) => Promise<void>
     players: Player[]
     search: (query: string) => Promise<Player | undefined>
+    statuses: Record<string, ActivePlayer>
 }
 
 export const PlayerService = () => {
-    const players: Player[] = []
+    const allPlayers: Player[] = []
+    const statuses: Record<string, ActivePlayer> = {}
 
     const add = (name: string, selectedWeapon: Weapon): Promise<void> => {
-        players.push({
+        const newPlayer: Player = {
             name: name.toLowerCase(),
             selectedWeapon,
             hp: 100,
-            id: players.length,
-        })
+            id: allPlayers.length,
+        }
+
+        allPlayers.push(newPlayer)
+        statuses[name] = {
+            ...newPlayer,
+            currentHp: newPlayer.hp, // default full hp
+        }
 
         return Promise.resolve()
     }
 
     const clear = (): Promise<void> => {
-        players.length = 0
+        allPlayers.length = 0
 
         return Promise.resolve()
     }
 
-    const load = (): Promise<void> => {
+    const load = (parsedGameState?: Record<string, unknown>): Promise<void> => {
         clear()
 
-        players.push(
-            {
-                hp: 100,
-                id: 1,
-                name: 'Wolven531',
-                selectedWeapon: Weapon.Fist,
-            },
-            {
-                hp: 100,
-                id: 2,
-                name: 'Zorven',
-                selectedWeapon: Weapon.Laser,
-            },
-            {
-                hp: 100,
-                id: 3,
-                name: 'Merlin',
-                selectedWeapon: Weapon.Flail,
-            },
-            {
-                hp: 100,
-                id: 4,
-                name: 'RoughNick',
-                selectedWeapon: Weapon.Shield,
-            },
-        )
+        // if saved game state, use it
+        if (parsedGameState?.players) {
+            const parsedPlayers = parsedGameState.players as ActivePlayer[]
+
+            parsedPlayers.forEach((p) => {
+                allPlayers.push({
+                    hp: p.hp,
+                    id: p.id,
+                    name: p.name,
+                    selectedWeapon: p.selectedWeapon,
+                } as Player)
+
+                statuses[p.name] = p
+            })
+
+            return Promise.resolve()
+        }
+
+        // otherwise, load from file data
+        // const playersPath = join(__dirname, '../../data/players.json')
+        // const playerData: Player[] = JSON.parse(readFileSync(playersPath, 'utf8'))
+
+        // use imported JSON instead of reading from file
+        playerData.forEach((p: Player) => {
+            allPlayers.push(p)
+            statuses[p.name] = { ...p, currentHp: p.hp } as ActivePlayer
+        })
 
         return Promise.resolve()
     }
@@ -66,7 +80,7 @@ export const PlayerService = () => {
         const normalizedQuery = query.toLowerCase().trim()
 
         return Promise.resolve(
-            players.find(
+            allPlayers.find(
                 (p) =>
                     p.name.toLowerCase() === normalizedQuery ||
                     p.id.toString() === normalizedQuery,
@@ -78,8 +92,9 @@ export const PlayerService = () => {
         add,
         clear,
         load,
-        players,
+        players: allPlayers,
         search,
+        statuses,
     } as PlayerServiceType
 }
 
