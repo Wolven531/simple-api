@@ -1,6 +1,6 @@
-import express, { Request, Response } from 'express'
+import express, { type Request, type Response } from 'express'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { Server } from 'node:http'
+import type { Server } from 'node:http'
 import { resolve } from 'node:path'
 import {
 	ENERGY_TIMER_MS,
