@@ -72,6 +72,94 @@ gameService
 </svg>`)
 		})
 
+		app.get('/chance', async (req: Request, res: Response) => {
+			const maxRuns = 1000000 // 1 million
+			const minRuns = 10
+			const results: Record<string, number> = {}
+			const runPromises = []
+
+			// grab data from query string
+			const { options, runs } = req.query
+
+			// parse runs
+			const normalizedRuns = Number(runs)
+			const numRuns =
+				isNaN(normalizedRuns) || normalizedRuns < minRuns
+					? 1000
+					: normalizedRuns > maxRuns
+						? maxRuns
+						: normalizedRuns
+			// parse options
+			const normalizedOptions = String(options ?? '')
+				.split(',')
+				.map((o) => o.trim())
+			const opts = normalizedOptions.filter((o) => o.length > 0)
+
+			// add default options if none provided
+			if (opts.length < 1) {
+				opts.push('opt1', 'opt2')
+			}
+
+			// populate results object with options and initialize to 0
+			for (let a = 0; a < opts.length; a++) {
+				results[opts[a]] = 0
+			}
+
+			const maxNum = opts.length - 1
+
+			const singleRun = (resolve: (value: unknown) => void) => {
+				const randomNum = Math.round(Math.random() * maxNum)
+
+				results[opts[randomNum]]++
+
+				resolve(undefined)
+			}
+
+			// create promises - one per run
+			for (let a = 0; a < numRuns; a++) {
+				runPromises.push(new Promise(singleRun))
+			}
+
+			// run all promises simultaneously
+			const start = performance.now()
+			await Promise.all(runPromises)
+			const end = performance.now()
+
+			// calculate percentages
+			const percentages: Record<string, number> = {}
+			Object.entries(results).forEach(([key, value]) => {
+				percentages[key] = parseFloat(
+					((value / numRuns) * 100).toFixed(3),
+				)
+			})
+
+			res.status(200).json({
+				options: opts,
+				percentages,
+				runs: numRuns,
+				timeMilliseconds: end - start,
+			})
+		})
+
+		app.get('/health', (req: Request, res: Response) => {
+			res.status(200).json({
+				status: 'ok',
+				timestamp: new Date().toISOString(),
+				uptime: process.uptime(),
+				// version: gameService.version,
+				players: gameService.playerService.players.length,
+				bosses: Object.keys(gameService.bossService.statuses).length,
+				weapons: Object.keys(Weapon).length,
+				// energyTimer: gameService.energyTimer,
+				// saveTimer: gameService.saveTimer,
+				// lastEnergyRestore: gameService.lastEnergyRestore,
+				// lastSave: gameService.lastSave,
+				// lastEnergyRestoreTimestamp:
+				// 	gameService.lastEnergyRestoreTimestamp,
+				// lastSaveTimestamp: gameService.lastSaveTimestamp,
+			})
+		})
+
 		// attack routes
 		app.post('/attack', async (req: Request, res: Response) => {
 			// TODO - grab player info from headers
