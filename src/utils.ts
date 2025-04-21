@@ -142,14 +142,13 @@ export const generateDocs = ({
 					<ul>
 						${Object.entries(Weapon)
 							.filter(
-								([key, val]) =>
-									weaponDamage[val as unknown as Weapon] !==
-									undefined,
+								([, val]) =>
+									weaponDamage[val as Weapon] !== undefined,
 							)
 							.map(
-								([key, val]) =>
+								([, val]) =>
 									`<li><a href="/weapon/${val}">${
-										Weapon[val as any]
+										Weapon[val as keyof typeof Weapon]
 									}</a> (${
 										weaponDamage[val as Weapon]
 									})</li>`,

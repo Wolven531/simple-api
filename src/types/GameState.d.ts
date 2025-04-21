@@ -1,3 +1,6 @@
+import type { ActiveBoss } from './ActiveBoss'
+import type { ActivePlayer } from './ActivePlayer'
+
 export type GameState = {
 	bosses: Record<string, ActiveBoss>
 	lastEnergyRestore: number

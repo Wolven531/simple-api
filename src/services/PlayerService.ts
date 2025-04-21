@@ -56,7 +56,7 @@ export const PlayerService = () => {
 				ActivePlayer
 			>
 
-			Object.entries(parsedPlayers).forEach(([k, v]) => {
+			Object.entries(parsedPlayers).forEach(([, v]) => {
 				allPlayers.push({
 					energy: v.energy,
 					hp: v.hp,

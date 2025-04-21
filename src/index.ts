@@ -230,9 +230,12 @@ Promise.all([
 					activeBoss.id.toString().includes(normalizedBossQuery),
 			) as [string, ActiveBoss]
 
-			boss
-				? res.status(200).json(boss)
-				: res.status(404).send({ error: 'Boss not found' })
+			if (!boss) {
+				res.status(404).send({ error: 'Boss not found' })
+				return
+			}
+
+			res.status(200).json(boss)
 		})
 
 		// player routes
@@ -329,16 +332,15 @@ Promise.all([
 						.includes(normalizedWeaponQuery),
 			) as [string, Weapon]
 
-			weaponEntries
-				? res.status(200).json({
-						damage: weaponDamage[
-							weaponEntries[0] as unknown as Weapon
-						],
-						name: weaponEntries[1],
-				  })
-				: res.status(404).send({
-						error: 'Weapon not found',
-				  })
+			if (!weaponEntries) {
+				res.status(404).send({ error: 'Weapon not found' })
+				return
+			}
+
+			res.status(200).json({
+				damage: weaponDamage[weaponEntries[0] as unknown as Weapon],
+				name: weaponEntries[1],
+			})
 		})
 
 		// startup server
