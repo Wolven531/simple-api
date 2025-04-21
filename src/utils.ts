@@ -168,3 +168,18 @@ export const generateDocs = ({
 	</body>
 </html>`
 }
+
+/**
+ * Generates a random number (repeated calls are uniformly distributed);
+ * Maximum and minimum are inclusive by default
+ *
+ * More info - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random#getting_a_random_integer_between_two_values_inclusive
+ */
+export const rand = (min: number, max: number, includeMax = true) => {
+	const minCeil = Math.ceil(min)
+	const maxFloor = Math.floor(max)
+
+	return Math.floor(
+		Math.random() * (maxFloor - minCeil + (includeMax ? 1 : 0)) + minCeil,
+	)
+}
