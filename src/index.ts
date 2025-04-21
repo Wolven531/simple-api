@@ -3,7 +3,7 @@ import type { Server } from 'node:http'
 import { Weapon } from './enums'
 import { GameService } from './services/GameService'
 import type { ActiveBoss, AttackResult } from './types'
-import { generateDocs, log } from './utils'
+import { generateDocs, log, rand } from './utils'
 
 // grab port from env or default to 3000
 const port = process.env.PORT ?? 3000
@@ -73,9 +73,10 @@ gameService
 		})
 
 		app.get('/chance', async (req: Request, res: Response) => {
+			const perfParseStart = performance.now()
+
 			const maxRuns = 1000000 // 1 million
 			const minRuns = 10
-			const results: Record<string, number> = {}
 			const runPromises = []
 
 			// grab data from query string
@@ -100,44 +101,81 @@ gameService
 				opts.push('opt1', 'opt2')
 			}
 
+			// const results: Record<string, number> = {}
 			// populate results object with options and initialize to 0
-			for (let a = 0; a < opts.length; a++) {
-				results[opts[a]] = 0
-			}
+			// for (let a = 0; a < opts.length; a++) {
+			// 	results[opts[a]] = 0
+			// }
 
-			const maxNum = opts.length - 1
+			// const maxNum = opts.length - 1
+			const singleRun = (resolve: (value: string) => void) => {
+				// const randomNum = Math.round(Math.random() * maxNum)
+				const randomNum = rand(0, opts.length, false)
 
-			const singleRun = (resolve: (value: unknown) => void) => {
-				const randomNum = Math.round(Math.random() * maxNum)
+				// results[opts[randomNum]]++
 
-				results[opts[randomNum]]++
-
-				resolve(undefined)
+				resolve(opts[randomNum])
 			}
 
 			// create promises - one per run
 			for (let a = 0; a < numRuns; a++) {
-				runPromises.push(new Promise(singleRun))
+				runPromises.push(new Promise<string>(singleRun))
 			}
+			const perfParseEnd = performance.now()
 
 			// run all promises simultaneously
-			const start = performance.now()
-			await Promise.all(runPromises)
-			const end = performance.now()
+			const perfRunsStart = performance.now()
+			const allRuns = await Promise.all(runPromises)
+			const perfRunsEnd = performance.now()
 
 			// calculate percentages
+			const perfResultsStart = performance.now()
 			const percentages: Record<string, number> = {}
-			Object.entries(results).forEach(([key, value]) => {
-				percentages[key] = parseFloat(
-					((value / numRuns) * 100).toFixed(3),
-				)
+			let highestEntry: { name: string; percent: number } | undefined
+			let lowestEntry: { name: string; percent: number } | undefined
+
+			opts.forEach((opt) => {
+				const count = allRuns.filter((r) => r === opt).length
+				// results[opt] = count
+
+				const percent = parseFloat(((count / numRuns) * 100).toFixed(3))
+				percentages[opt] = percent
+
+				if (!highestEntry || percent > highestEntry.percent) {
+					highestEntry = {
+						name: opt,
+						percent,
+					}
+				}
+				if (!lowestEntry || percent < lowestEntry.percent) {
+					lowestEntry = {
+						name: opt,
+						percent,
+					}
+				}
 			})
 
-			res.status(200).json({
+			const respData = {
 				options: opts,
 				percentages,
 				runs: numRuns,
-				timeMilliseconds: end - start,
+				lowestEntry,
+				highestEntry,
+			}
+			const perfResultsEnd = performance.now()
+
+			const parseMs = perfParseEnd - perfParseStart
+			const runsMs = perfRunsEnd - perfRunsStart
+			const resultsMs = perfResultsEnd - perfResultsStart
+
+			res.status(200).json({
+				...respData,
+				perf: {
+					parseMs,
+					runsMs,
+					resultsMs,
+					totalMs: parseMs + runsMs + resultsMs,
+				},
 			})
 		})
 
