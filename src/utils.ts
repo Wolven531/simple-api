@@ -1,6 +1,7 @@
 import { Weapon } from './enums'
-import type { BossServiceType } from './services/BossService'
-import type { PlayerServiceType } from './services/PlayerService'
+// import type { BossServiceType } from './services/BossService'
+import type { GameServiceType } from './services/GameService'
+// import type { PlayerServiceType } from './services/PlayerService'
 
 /**
  * This function logs messages to console with a timestamp
@@ -23,15 +24,17 @@ export const log = (msg: string, isError = false) => {
  * This function generates the HTML documentation for the API
  */
 export const generateDocs = ({
-	bossService,
+	// bossService,
+	gameService,
 	pageTitle,
-	playerService,
-	weaponDamage,
+	// playerService,
+	// weaponDamage,
 }: {
-	bossService: BossServiceType
+	// bossService: BossServiceType
+	gameService: GameServiceType
 	pageTitle: string
-	playerService: PlayerServiceType
-	weaponDamage: Record<Weapon, number>
+	// playerService: PlayerServiceType
+	// weaponDamage: Record<Weapon, number>
 }) => {
 	return `
 <!DOCTYPE html>
@@ -107,7 +110,7 @@ export const generateDocs = ({
 				<li>GET <a href="/boss">/boss</a> - Get all bosses</li>
 				<li>GET <code>/boss/:name</code> - Get boss by name
 					<ul>
-						${bossService.allBosses
+						${gameService.bossService.allBosses
 							.map(
 								(b) =>
 									`<li><a href="/boss/${b.name}">${b.name}</a></li>`,
@@ -122,7 +125,7 @@ export const generateDocs = ({
 				<li>GET <a href="/player">/player</a> - Get all players</li>
 				<li>GET <code>/player/:idOrName</code> - Get player by name
 					<ul>
-						${playerService.players
+						${gameService.playerService.players
 							.map(
 								(p) =>
 									`<li><a href="/player/${p.name}">${p.name}</a></li>`,
@@ -143,14 +146,15 @@ export const generateDocs = ({
 						${Object.entries(Weapon)
 							.filter(
 								([, val]) =>
-									weaponDamage[val as Weapon] !== undefined,
+									gameService.weaponDamage[val as Weapon] !==
+									undefined,
 							)
 							.map(
 								([, val]) =>
 									`<li><a href="/weapon/${val}">${
 										Weapon[val as keyof typeof Weapon]
 									}</a> (${
-										weaponDamage[val as Weapon]
+										gameService.weaponDamage[val as Weapon]
 									})</li>`,
 							)
 							.join('')}
