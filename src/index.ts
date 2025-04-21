@@ -394,11 +394,24 @@ gameService
 		process.on('SIGBREAK', (s) => {
 			onServerShutdown(server, s)
 		})
+		// `nodemon --signal SIGHUP`
+		// process.on('SIGHUP', (s) => {
+		// 	onServerShutdown(server, s)
+		// 	// process.kill(process.pid, 'SIGTERM')
+		// })
 		process.on('SIGINT', (s) => {
 			onServerShutdown(server, s)
 		})
 		process.on('SIGTERM', (s) => {
 			onServerShutdown(server, s)
+		})
+		// important to use `on` and not `once` as nodemon can re-send the kill signal
+		process.on('SIGUSR2', (s) => {
+			log(`Received signal: ${s}`)
+
+			// gracefulShutdown(function () {
+			process.kill(process.pid, 'SIGTERM')
+			// });
 		})
 		// below listener causes crash
 		// process.on('SIGKILL', (s) => {
