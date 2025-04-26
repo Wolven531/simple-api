@@ -1,4 +1,4 @@
-import express, { type Request, type Response } from 'express'
+import express, { type Express, type Request, type Response } from 'express'
 import type { Server } from 'node:http'
 import { Weapon } from './enums'
 import { GameService } from './services/GameService'
@@ -6,14 +6,18 @@ import type { ActiveBoss, AttackResult } from './types'
 import { generateDocs, log, rand } from './utils'
 
 // grab port from env or default to 3000
-const port = process.env.PORT ?? 3000
+const DEFAULT_PORT = process.env.PORT ?? 3000
 
 const gameService = GameService()
 
 /**
  * This function is called when the server shuts down
  */
-const onServerShutdown = (server: Server, sig: NodeJS.Signals) => {
+const onServerShutdown = (server?: Server, sig?: NodeJS.Signals) => {
+	if (!server || !sig) {
+		return
+	}
+
 	log(`Received signal: ${sig}`)
 	log('HTTP server is shutting down...')
 
@@ -32,7 +36,7 @@ const onServerShutdown = (server: Server, sig: NodeJS.Signals) => {
 /**
  * This function is called when the server starts
  */
-const onServerStart = () => {
+const onServerStart = (port = DEFAULT_PORT) => {
 	log(`Server is running on port ${port}`)
 
 	gameService.start().then(() => {
@@ -40,12 +44,54 @@ const onServerStart = () => {
 	})
 }
 
+let app: Express | undefined
+let server: Server | undefined
+
+/**
+ * Asynchronously create express app
+ */
+const create = (): Promise<Express> => {
+	return new Promise((resolve) => {
+		// create express app
+		const newApp = express()
+
+		resolve(newApp)
+	})
+}
+
+/**
+ * Asynchronously start listening to a port on the server and return the server
+ */
+const listen = (app: Express, port = DEFAULT_PORT): Promise<Server> => {
+	return new Promise((resolve) => {
+		// startup server
+		const newServer = app.listen(port, () => {
+			onServerStart()
+
+			resolve(newServer)
+		})
+	})
+}
+
+/**
+ * Asynchronously close server
+ */
+const shutdown = (): Promise<void> => {
+	return new Promise((resolve) => {
+		server?.close(() => {
+			resolve()
+		})
+	})
+}
+
 // load game service
 gameService
 	.load()
 	.then(() => {
-		// create server (express app)
-		const app = express()
+		return create()
+	})
+	.then((expressApp) => {
+		app = expressApp
 
 		// !! ----------
 		// !! Only setup middleware and routes if game service loaded successfully
@@ -388,9 +434,6 @@ gameService
 			})
 		})
 
-		// startup server
-		const server = app.listen(port, onServerStart)
-
 		process
 			.on('SIGBREAK', (s) => {
 				onServerShutdown(server, s)
@@ -422,11 +465,19 @@ gameService
 		// .on('SIGKILL', (s) => {
 		// 	onServerShutdown(server, s)
 		// })
+
+		return listen(app).then((createdServer) => {
+			server = createdServer
+		})
 	})
 	.catch((err) => {
 		log('Error loading game service', true)
 		log(err, true)
 		log('Exiting...', true)
 
-		process.exit(1)
+		shutdown().then(() => {
+			process.exit(1)
+		})
 	})
+
+export { app, create, listen, server, shutdown }
