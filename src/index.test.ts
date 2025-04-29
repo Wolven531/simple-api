@@ -1,14 +1,15 @@
-import type { Express } from 'express'
+// import type { Express } from 'express'
 import request from 'supertest'
 import type TestAgent from 'supertest/lib/agent'
 import { create, shutdown } from './index'
 
 describe('API', () => {
-	let app: Express
+	// let app: Express
 	let req: TestAgent
 
 	beforeAll(async () => {
-		app = await create()
+		// app = await create()
+		await create()
 
 		// TODO - custom port
 		req = request('http://localhost:3000')
